@@ -1,6 +1,4 @@
 streamlit
 pillow
-sentence-transformers
-chromadb==0.4.24
 numpy
 requests
