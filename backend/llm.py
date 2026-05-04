@@ -1,30 +1,32 @@
+import os
 import logging
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
-_llm_instance = None
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-def load_llm():
-    """
-    Disabled local LLM for deployment stability.
-    """
-    global _llm_instance
-    return None
+def generate_text(prompt: str, max_tokens: int = 800) -> str:
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a Michelin-star chef that creates structured recipes."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.7,
+            max_tokens=max_tokens
+        )
 
+        return response.choices[0].message.content
 
-def generate_text(prompt: str, max_tokens: int = 1024) -> str:
-    """
-    Fallback response without local model.
-    Keeps app functional on Streamlit Cloud.
-    """
-
-    logger.info("LLM is disabled - returning fallback response")
-
-    return (
-        "🍳 Rezept-Generator (Demo-Modus)\n\n"
-        "Deine Eingabe:\n"
-        f"{prompt}\n\n"
-        "⚠️ Hinweis: Lokales KI-Modell ist deaktiviert, damit die App stabil läuft.\n"
-        "👉 Nächster Schritt wäre: API-Integration (z. B. OpenAI oder HuggingFace Inference)"
-    )
+    except Exception as e:
+        logger.error(e)
+        return "Fehler: KI konnte nicht geladen werden (API prüfen)"
