@@ -13,4 +13,4 @@ numpy==1.26.4
 protobuf==3.20.3
 
 requests
-openai
+google-generativeai
