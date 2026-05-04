@@ -1,32 +1,19 @@
 import os
 import logging
-from openai import OpenAI
+import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 
 def generate_text(prompt: str, max_tokens: int = 800) -> str:
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a Michelin-star chef that creates structured recipes."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.7,
-            max_tokens=max_tokens
-        )
-
-        return response.choices[0].message.content
+        response = model.generate_content(prompt)
+        return response.text
 
     except Exception as e:
         logger.error(e)
-        return "Fehler: KI konnte nicht geladen werden (API prüfen)"
+        return "❌ Fehler: Gemini API konnte nicht geladen werden"
