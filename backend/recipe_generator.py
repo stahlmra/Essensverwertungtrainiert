@@ -1,108 +1,113 @@
+# =========================
+# backend/recipe_generator.py
+# =========================
+
 from .simple_recipe_search import search_recipe
-import re
 from .rag_pipeline import query_similar
-from .llm import generate_text
+import re
 
-PROMPT_TEMPLATE = """
-You are a professional Michelin-star chef. 
-I have the following ingredients: {ingredients}.
-Dietary Preferences: {prefs}.
-
-Here is some context from my personal cookbook (use if relevant):
-{context}
-
-TASK:
-Create ONE single, highly detailed recipe.
-Do NOT use bold asterisks (**) for the Title or Labels.
-Follow this format EXACTLY:
-
-Title: [Name of the Dish]
-Description: [A short, mouth-watering summary]
-Time: [Prep & Cook Time] | Servings: [Number]
-
-Ingredients
-- [List items]
-
-Instructions
-1. [Step 1]
-2. [Step 2]
-
-Chef's Tip: [A professional secret tip]
-"""
-
-
+# =========================
+# CLEAN TEXT
+# =========================
 def clean_text(text):
-    text = text.replace("**Title:**", "Title:").replace("**Description:**", "Description:")
     text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     return text
 
 
+# =========================
+# MAIN FUNCTION
+# =========================
 def generate_chef_response(ingredients: list, prefs: str = ""):
 
-    # 1. RAG Kontext
-    similar_recipes = query_similar(ingredients, top_k=2)
+    # =========================
+    # RAG SEARCH
+    # =========================
+    try:
+        similar_recipes = query_similar(ingredients, top_k=2)
+    except Exception:
+        similar_recipes = []
 
-    context_str = ""
-    for r in similar_recipes:
-        context_str += f"- {r['title']} (Ingredients: {r['ingredients']})\n"
-
-    # 2. Prompt bauen (für später KI optional)
-    prompt = PROMPT_TEMPLATE.format(
-        ingredients=", ".join(ingredients),
-        prefs=prefs if prefs else "None",
-        context=context_str if context_str else "No prior recipes found."
-    )
-
-    # 3. LOCAL RECIPE SEARCH (wichtig!)
+    # =========================
+    # LOCAL RECIPE SEARCH
+    # =========================
     recipe = search_recipe(ingredients)
 
-    # 4. Ergebnis bestimmen
-    if recipe:
-        raw_text = f"""
-Title: {recipe.get('title', 'Rezept')}
+    # =========================
+    # NO RECIPE FOUND
+    # =========================
+    if not recipe:
 
-Ingredients:
-{", ".join(recipe.get('ingredients', []))}
+        empty_html = """
+        <h3>No Recipe Found</h3>
 
-Instructions:
-{recipe.get('instructions', 'Keine Anleitung gefunden.')}
-"""
-    else:
-        # fallback (optional KI später)
-        raw_text = "❌ Kein passendes Rezept gefunden."
+        <p>
+        We could not find a matching recipe for your ingredients.
+        Try adding more ingredients.
+        </p>
+        """
 
-    # 5. Parsing
-    lines = raw_text.strip().split('\n')
+        return (
+            "No Recipe Found",
+            empty_html,
+            similar_recipes
+        )
 
-    title = "Chef's Special Creation"
-    body_lines = []
-    title_found = False
+    # =========================
+    # FORMAT INGREDIENTS
+    # =========================
+    ingredients_html = ""
 
-    for line in lines:
-        line = clean_text(line.strip())
+    for ing in recipe.get("ingredients", []):
+        ingredients_html += f"<li>{clean_text(ing)}</li>"
 
-        if not line:
-            continue
+    # =========================
+    # FORMAT INSTRUCTIONS
+    # =========================
+    instructions_raw = recipe.get(
+        "instructions",
+        "No instructions available."
+    )
 
-        if not title_found and line.startswith("Title:"):
-            title = line.replace("Title:", "").strip()
-            title_found = True
+    instruction_parts = [
+        x.strip()
+        for x in instructions_raw.split(".")
+        if x.strip()
+    ]
 
-        elif line.startswith("Ingredients"):
-            body_lines.append("<h3>Ingredients</h3>")
+    instructions_html = ""
 
-        elif line.startswith("Instructions"):
-            body_lines.append("<h3>Instructions</h3>")
+    for step in instruction_parts:
+        instructions_html += f"""
+        <div class="step">
+            • {clean_text(step)}.
+        </div>
+        """
 
-        elif line.startswith("- "):
-            body_lines.append(f"<li>{line[2:]}</li>")
+    # =========================
+    # FINAL HTML
+    # =========================
+    body_html = f"""
 
-        elif re.match(r'^\d+\.', line):
-            body_lines.append(f"<p class='step'>{line}</p>")
+    <div class="recipe-section">
 
-        else:
-            body_lines.append(f"<p>{line}</p>")
+        <h3>🥘 Ingredients</h3>
 
-    clean_body = "\n".join(body_lines)
+        <ul>
+            {ingredients_html}
+        </ul>
 
-    return title, clean_body, similar_recipes
+        <h3>👨‍🍳 Instructions</h3>
+
+        {instructions_html}
+
+    </div>
+    """
+
+    # =========================
+    # RETURN
+    # =========================
+    return (
+        recipe.get("title", "Chef Recipe"),
+        body_html,
+        similar_recipes
+    )
