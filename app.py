@@ -7,7 +7,7 @@ from backend.recipe_generator import generate_chef_response
 
 # --- PAGE CONFIG ---
 st.set_page_config(
-    page_title="AI Chef Pro",
+    page_title="Benes Geheimrezepte",
     page_icon="👨‍🍳",
     layout="centered"
 )
