@@ -2,27 +2,33 @@ import streamlit as st
 from PIL import Image
 import io
 import os
+
 from backend.img_ingred_detection import extract_ingredients
 from backend.recipe_generator import generate_chef_response
 
-# --- PAGE CONFIG ---
+# =========================
+# PAGE CONFIG
+# =========================
 st.set_page_config(
-    page_title="AI Chef Pro",
-    page_icon="👨‍🍳",
+    page_title="Chef's Table AI",
+    page_icon="🍽️",
     layout="centered"
 )
 
-# --- DATABASE CHECK ---
+# =========================
+# DATABASE CHECK
+# =========================
 if not os.path.exists("./chroma_db"):
     try:
         if os.path.exists("scripts/seed_chroma.py"):
-            st.toast("🌱 First run: Seeding database...", icon="⚙️")
             from scripts.seed_chroma import seed
             seed()
     except Exception:
         pass
 
-# --- SESSION STATE ---
+# =========================
+# SESSION STATE
+# =========================
 if "ingredients_list" not in st.session_state:
     st.session_state.ingredients_list = ""
 if "recipe_title" not in st.session_state:
@@ -32,191 +38,200 @@ if "recipe_body" not in st.session_state:
 if "rag_recommendations" not in st.session_state:
     st.session_state.rag_recommendations = []
 
-# --- PROFESSIONAL CSS THEME ---
+# =========================
+# 🍷 FINE DINING CSS
+# =========================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400;700&display=swap');
 
-    /* Global */
-    .stApp { background-color: #fcfbf9; }
-    
-    /* Main Recipe Card */
-    .recipe-card {
-        background: white; 
-        padding: 40px; 
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
-        border: 1px solid #e0e0e0;
-        margin-bottom: 30px;
-        font-family: 'Lato', sans-serif;
-        color: #333;
-    }
-    
-    /* Typography */
-    .recipe-title {
-        color: #2c3e50;
-        font-family: 'Playfair Display', serif;
-        font-size: 2.5rem;
-        margin-bottom: 15px;
-        line-height: 1.2;
-        border-bottom: 3px solid #FFD700;
-        display: inline-block;
-        padding-bottom: 5px;
-    }
-    
-    .recipe-desc {
-        font-size: 1.1rem;
-        color: #555;
-        font-style: italic;
-        margin-bottom: 20px;
-        background: #f9f9f9;
-        padding: 15px;
-        border-left: 4px solid #FFD700;
-        border-radius: 4px;
-    }
-    
-    .label {
-        font-weight: 800;
-        color: #000;
-        text-transform: uppercase;
-        font-size: 0.9rem;
-        letter-spacing: 0.5px;
-        margin-right: 5px;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600&display=swap');
 
-    .recipe-meta {
-        font-size: 0.95rem;
-        color: #777;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 25px;
-    }
+.stApp {
+    background-color: #f7f3ee;
+    font-family: 'Inter', sans-serif;
+}
 
-    h3 {
-        font-family: 'Playfair Display', serif;
-        color: #333;
-        margin-top: 25px;
-        margin-bottom: 15px;
-        font-size: 1.5rem;
-    }
+/* HEADER */
+h1 {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    color: #2b1d14;
+    font-size: 44px;
+}
 
-    /* List Styling */
-    li { margin-bottom: 8px; line-height: 1.6; }
-    .step { margin-bottom: 12px; line-height: 1.6; }
+/* SUBTITLE */
+.subtitle {
+    text-align: center;
+    color: #6b5b4d;
+    margin-bottom: 30px;
+}
 
-    /* Badge */
-    .badge {
-        background: #333; color: #fff; padding: 5px 12px;
-        border-radius: 20px; font-size: 0.7rem; 
-        text-transform: uppercase; letter-spacing: 1px;
-        float: right; margin-top: -10px;
-    }
-    
-    /* RAG Cards */
-    .rag-card {
-        background: white; padding: 20px; border-radius: 8px; 
-        border: 1px solid #eee; height: 100%;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-    }
+/* MAIN CARD */
+.recipe-card {
+    background: white;
+    border-radius: 20px;
+    padding: 35px;
+    margin-top: 25px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+    border: 1px solid #eee;
+}
+
+/* TITLE */
+.recipe-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    color: #1f1510;
+    border-bottom: 3px solid #c9a66b;
+    display: inline-block;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+/* BADGE */
+.badge {
+    float: right;
+    background: #1f1510;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* SECTION HEADERS */
+h3 {
+    font-family: 'Playfair Display', serif;
+    margin-top: 25px;
+    color: #2b1d14;
+}
+
+/* STEPS */
+.step {
+    margin-left: 10px;
+    padding: 4px 0;
+    line-height: 1.6;
+}
+
+/* RAG CARDS */
+.rag-card {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+}
+
+/* INPUT */
+.stTextInput input {
+    border-radius: 12px;
+    padding: 10px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-# --- MAIN UI ---
-st.title("👨‍🍳 AI Chef Pro")
-st.write("Upload a photo or enter ingredients to generate a chef-quality recipe.")
+# =========================
+# HEADER
+# =========================
+st.markdown("# 🍽️ Chef's Table AI")
+st.markdown("<div class='subtitle'>Fine Dining Experience powered by AI</div>", unsafe_allow_html=True)
 
-# --- SIDEBAR ---
+# =========================
+# SIDEBAR
+# =========================
 with st.sidebar:
-    st.header("Settings")
-    prefs = st.text_input("Dietary Preferences", placeholder="e.g. Vegetarian, Keto")
-    st.info("💡 **Tip:** Ensure good lighting for better detection.")
+    st.header("Preferences")
+    prefs = st.text_input("Dietary Preferences", placeholder="Vegetarian, Keto, etc.")
+    st.info("📸 Upload image or type ingredients manually")
 
-# --- INPUT TABS ---
-tabs = st.tabs(["📸 Photo Input", "📝 Manual Input"])
+# =========================
+# INPUT TABS
+# =========================
+tabs = st.tabs(["📸 Image", "✍️ Manual"])
 
-# TAB 1: PHOTO
+# TAB IMAGE
 with tabs[0]:
-    uploaded = st.file_uploader("Upload Pantry Photo", type=["jpg", "png", "jpeg"])
-    
+    uploaded = st.file_uploader("Upload image", type=["png", "jpg", "jpeg"])
+
     if uploaded:
-        st.image(uploaded, caption="Uploaded Image", width="stretch")
-        
-        if st.button("🔍 Detect Ingredients", key="btn_detect"):
-            with st.spinner("Analyzing image..."):
-                uploaded.seek(0)
-                img_bytes = uploaded.read()
-                detected = extract_ingredients(img_bytes)
-                if detected:
-                    st.session_state.ingredients_list = ", ".join(detected)
-                    st.success(f"Detected {len(detected)} items!")
-                else:
-                    st.warning("No ingredients detected. Please type manually.")
-                    st.session_state.ingredients_list = ""
+        st.image(uploaded, use_container_width=True)
+
+        if st.button("Detect Ingredients"):
+            uploaded.seek(0)
+            detected = extract_ingredients(uploaded.read())
+
+            if detected:
+                st.session_state.ingredients_list = ", ".join(detected)
+            else:
+                st.session_state.ingredients_list = ""
+
             st.rerun()
 
-# TAB 2: MANUAL
+# TAB MANUAL
 with tabs[1]:
-    st.write("Type ingredients manually if you don't have a photo.")
+    st.write("Enter ingredients manually if needed.")
 
-# --- EDITING & GENERATION ---
+# =========================
+# INGREDIENT EDITOR
+# =========================
 st.divider()
-st.subheader("✅ Confirm Ingredients")
+st.subheader("🥕 Ingredients")
 
-final_ingredients_str = st.text_area(
-    "Edit list before generating:", 
+final = st.text_area(
+    "Edit ingredients:",
     value=st.session_state.ingredients_list,
-    placeholder="e.g. tomato, onion, chicken...",
-    help="Add missing items or remove errors here."
+    placeholder="tomato, onion, garlic..."
 )
-st.session_state.ingredients_list = final_ingredients_str
 
-if st.button("🔥 Cook Now!", type="primary"):
-    ingredients_clean = [x.strip() for x in final_ingredients_str.split(",") if x.strip()]
-    
-    if not ingredients_clean:
-        st.error("Please enter at least one ingredient.")
+st.session_state.ingredients_list = final
+
+# =========================
+# COOK BUTTON
+# =========================
+if st.button("🍷 Create Dish", type="primary"):
+
+    ingredients = [x.strip() for x in final.split(",") if x.strip()]
+
+    if not ingredients:
+        st.error("Please enter ingredients")
     else:
-        with st.spinner("👨‍🍳 The Chef is designing your recipe..."):
-            # UNPACKING 3 VALUES
-            title, body, rag_recs = generate_chef_response(ingredients_clean, prefs)
-            
-            st.session_state.recipe_title = title
-            st.session_state.recipe_body = body
-            st.session_state.rag_recommendations = rag_recs
+        title, body, rag = generate_chef_response(ingredients, prefs)
+
+        st.session_state.recipe_title = title
+        st.session_state.recipe_body = body
+        st.session_state.rag_recommendations = rag
+
         st.rerun()
 
-# --- RESULTS DISPLAY ---
+# =========================
+# OUTPUT
+# =========================
 if st.session_state.recipe_body:
+
     st.divider()
-    
-    # 1. RENDER MAIN RECIPE CARD
+
     st.markdown(f"""
-    <div class='recipe-card'>
-        <span class='badge'>AI Generated</span>
-        <div class='recipe-title'>{st.session_state.recipe_title}</div>
+    <div class="recipe-card">
+        <span class="badge">Chef AI</span>
+        <div class="recipe-title">{st.session_state.recipe_title}</div>
         {st.session_state.recipe_body}
     </div>
     """, unsafe_allow_html=True)
 
-    # 2. RAG RECOMMENDATIONS
+    # =========================
+    # RAG SECTION
+    # =========================
     if st.session_state.rag_recommendations:
-        st.subheader("📚 Inspired by the Cookbook")
+        st.subheader("📚 Inspired Recipes")
+
         cols = st.columns(len(st.session_state.rag_recommendations))
-        
-        for idx, rec in enumerate(st.session_state.rag_recommendations):
-            with cols[idx]:
+
+        for i, r in enumerate(st.session_state.rag_recommendations):
+            with cols[i]:
                 st.markdown(f"""
-                <div class='rag-card'>
-                    <h4 style='margin:0; color:#333;'>{rec['title']}</h4>
-                    <p style='color:#27ae60; font-weight:bold; font-size:0.8rem; margin-bottom:10px;'>
-                        Match Score: {1 - rec['score']:.2f}
-                    </p>
-                    <details>
-                        <summary style='cursor:pointer; color:#777;'>View Snippet</summary>
-                        <p style='color:#555; font-size:0.85rem; margin-top:5px; line-height:1.4;'>
-                            {rec['recipe_text'][:250]}...
-                        </p>
-                    </details>
+                <div class="rag-card">
+                    <b>{r['title']}</b><br>
+                    <small>Match: {1 - r.get('score', 0):.2f}</small>
                 </div>
                 """, unsafe_allow_html=True)
