@@ -5,7 +5,7 @@ from .rag_pipeline import query_similar
 def generate_chef_response(ingredients: list, prefs: str = ""):
 
     # =========================
-    # RAG
+    # RAG (optional)
     # =========================
     try:
         similar_recipes = query_similar(ingredients, top_k=2)
@@ -13,7 +13,7 @@ def generate_chef_response(ingredients: list, prefs: str = ""):
         similar_recipes = []
 
     # =========================
-    # RECIPE FETCH
+    # RECIPE SEARCH
     # =========================
     recipe = search_recipe(ingredients)
 
@@ -28,13 +28,13 @@ def generate_chef_response(ingredients: list, prefs: str = ""):
         )
 
     # =========================
-    # CLEAN DATA OUTPUT (WICHTIG!)
+    # CLEAN OUTPUT STRUCTURE
     # =========================
-    instructions_raw = recipe.get("instructions", "")
+    instructions = recipe.get("instructions", "")
 
-    instructions_list = [
+    steps = [
         s.strip()
-        for s in instructions_raw.split(".")
+        for s in instructions.split(".")
         if s.strip()
     ]
 
@@ -42,7 +42,7 @@ def generate_chef_response(ingredients: list, prefs: str = ""):
         recipe.get("title", "Chef Recipe"),
         {
             "ingredients": recipe.get("ingredients", []),
-            "instructions": instructions_list
+            "instructions": steps
         },
         similar_recipes
     )
