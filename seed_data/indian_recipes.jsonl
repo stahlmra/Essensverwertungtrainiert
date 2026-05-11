@@ -8,3 +8,6 @@
 {"id":"r8","title":"Egg Bhurji","ingredients":["egg","onion","tomato","green chili","turmeric","oil","salt"],"text":"Scramble eggs; sauté onion and tomato, add spices, add eggs and cook till done."}
 {"id":"r9","title":"Aloo Paratha Filling","ingredients":["potato","green chili","cumin","coriander","salt"],"text":"Boiled mashed potatoes mixed with spices to be used as paratha filling."}
 {"id":"r10","title":"Tomato Rasam","ingredients":["tomato","tamarind","cumin","mustard","garlic","coriander","salt"],"text":"Prepare tamarind water; cook tomatoes, add spices and tamarind; finish with tempering and coriander."}
+{"title":"Spaghetti Aglio e Olio","ingredients":["spaghetti","garlic","olive oil","parsley"],"instructions":"Cook spaghetti. Fry garlic in olive oil. Mix together and serve."}
+{"title":"Tomato Pasta","ingredients":["spaghetti","tomato","onion","olive oil"],"instructions":"Cook spaghetti. Prepare tomato sauce with onion and olive oil. Combine and serve."}
+{"title":"Paneer Curry","ingredients":["paneer","tomato","onion"],"instructions":"Cook onions and tomatoes. Add paneer and simmer."}
