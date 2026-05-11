@@ -1,3 +1,4 @@
+from .simple_recipe_search import search_recipe
 import re
 from .rag_pipeline import query_similar
 from .llm import generate_text
@@ -59,8 +60,20 @@ def generate_chef_response(ingredients: list, prefs: str = ""):
         context=context_str if context_str else "No prior recipes found."
     )
 
-    # 3. Generate Raw Text
-    raw_text = generate_text(prompt)
+    recipe = search_recipe(ingredients_clean)
+
+if recipe:
+    raw_text = f"""
+{recipe.get('title', 'Rezept')}
+
+Ingredients:
+{", ".join(recipe.get('ingredients', []))}
+
+Instructions:
+{recipe.get('instructions', 'Keine Anleitung gefunden.')}
+"""
+else:
+    raw_text = "❌ Kein passendes Rezept gefunden."
 
     # 4. Parse & Clean
     lines = raw_text.strip().split('\n')
