@@ -1,14 +1,5 @@
 from .simple_recipe_search import search_recipe
 from .rag_pipeline import query_similar
-import re
-
-
-# =========================
-# CLEAN TEXT
-# =========================
-def clean_text(text):
-    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
-    return text
 
 
 # =========================
@@ -25,84 +16,53 @@ def generate_chef_response(ingredients: list, prefs: str = ""):
         similar_recipes = []
 
     # =========================
-    # LOCAL RECIPE SEARCH
+    # SEARCH RECIPE
     # =========================
     recipe = search_recipe(ingredients)
 
-    # =========================
-    # NO RECIPE FOUND
-    # =========================
     if not recipe:
-
-        body = """
-        <div class='recipe-text'>
-            <p>No matching recipe found.</p>
-            <p>Try adding more ingredients.</p>
-        </div>
-        """
-
         return (
             "No Recipe Found",
-            body,
+            "<p>No recipe found for these ingredients.</p>",
             similar_recipes
         )
 
     # =========================
-    # INGREDIENTS HTML
+    # INGREDIENTS
     # =========================
-    ingredients_html = ""
-
-    for ing in recipe.get("ingredients", []):
-        ingredients_html += f"<li>{clean_text(ing)}</li>"
-
-    # =========================
-    # INSTRUCTIONS HTML
-    # =========================
-    instructions_raw = recipe.get(
-        "instructions",
-        "No instructions available."
+    ingredients_html = "".join(
+        f"<li>{i}</li>" for i in recipe.get("ingredients", [])
     )
 
+    # =========================
+    # INSTRUCTIONS
+    # =========================
+    instructions = recipe.get("instructions", "")
+
     steps = [
-        x.strip()
-        for x in instructions_raw.split(".")
-        if x.strip()
+        s.strip()
+        for s in instructions.split(".")
+        if s.strip()
     ]
 
-    instructions_html = ""
-
-    for i, step in enumerate(steps, start=1):
-
-        instructions_html += f"""
-        <div class="step">
-            <b>Step {i}:</b> {clean_text(step)}.
-        </div>
-        """
+    steps_html = "".join(
+        f"<div class='step'><b>Step {idx+1}:</b> {step}.</div>"
+        for idx, step in enumerate(steps)
+    )
 
     # =========================
-    # FINAL CLEAN HTML
+    # RETURN ONLY CONTENT (NO CARD!)
     # =========================
-    body = f"""
-    <div class="recipe-content">
+    body_html = f"""
+    <h3>🥘 Ingredients</h3>
+    <ul>{ingredients_html}</ul>
 
-        <h3>🥘 Ingredients</h3>
-
-        <ul>
-            {ingredients_html}
-        </ul>
-
-        <h3>👨‍🍳 Instructions</h3>
-
-        {instructions_html}
-
-    </div>
+    <h3>👨‍🍳 Instructions</h3>
+    {steps_html}
     """
 
-    # =========================
-    # RETURN
-    # =========================
     return (
         recipe.get("title", "Chef Recipe"),
-        body,
+        body_html,
         similar_recipes
     )
