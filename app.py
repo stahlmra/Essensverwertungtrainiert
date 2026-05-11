@@ -1,6 +1,8 @@
+# =========================
+# app.py
+# =========================
+
 import streamlit as st
-from PIL import Image
-import io
 import os
 
 from backend.img_ingred_detection import extract_ingredients
@@ -42,18 +44,13 @@ if "rag_recommendations" not in st.session_state:
     st.session_state.rag_recommendations = []
 
 # =========================
-# ⭐ MICHELIN CSS
+# MICHELIN CSS
 # =========================
 st.markdown("""
 <style>
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500&display=swap');
 
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-}
-
-/* BACKGROUND */
 .stApp {
     background: linear-gradient(
         180deg,
@@ -63,34 +60,21 @@ html, body, [class*="css"] {
     color: #f5f5f5;
 }
 
-/* REMOVE STREAMLIT TOP SPACE */
-.block-container {
-    padding-top: 2rem;
-    padding-bottom: 3rem;
-}
-
-/* MAIN TITLE */
 .main-title {
     text-align: center;
     font-family: 'Cormorant Garamond', serif;
     font-size: 64px;
-    font-weight: 700;
     color: #d4af37;
     margin-bottom: 0;
-    letter-spacing: 1px;
 }
 
-/* SUBTITLE */
 .subtitle {
     text-align: center;
     color: #d0d0d0;
-    font-size: 18px;
     margin-bottom: 40px;
     letter-spacing: 2px;
-    text-transform: uppercase;
 }
 
-/* RECIPE CARD */
 .recipe-card {
     background: linear-gradient(
         145deg,
@@ -111,18 +95,16 @@ html, body, [class*="css"] {
         0 0 25px rgba(212,175,55,0.08);
 }
 
-/* RECIPE TITLE */
 .recipe-title {
     font-family: 'Cormorant Garamond', serif;
     font-size: 42px;
     color: #f8e7b0;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
     border-bottom: 2px solid #d4af37;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
     display: inline-block;
 }
 
-/* GOLD BADGE */
 .badge {
     float: right;
 
@@ -143,44 +125,26 @@ html, body, [class*="css"] {
     font-size: 11px;
 
     letter-spacing: 2px;
-
-    text-transform: uppercase;
 }
 
-/* HEADINGS */
 h3 {
     font-family: 'Cormorant Garamond', serif;
     color: #d4af37;
-    font-size: 28px;
     margin-top: 28px;
 }
 
-/* TEXT */
 p, li {
     color: #e5e5e5;
     line-height: 1.8;
     font-size: 16px;
 }
 
-/* STEP STYLE */
 .step {
     margin-bottom: 12px;
     padding-left: 10px;
     border-left: 2px solid rgba(212,175,55,0.4);
 }
 
-/* INPUTS */
-.stTextInput input,
-.stTextArea textarea {
-    background-color: #1b1b1b !important;
-    color: white !important;
-
-    border: 1px solid rgba(212,175,55,0.25) !important;
-
-    border-radius: 14px !important;
-}
-
-/* BUTTON */
 .stButton > button {
     background: linear-gradient(
         90deg,
@@ -197,24 +161,8 @@ p, li {
     padding: 0.7rem 1.4rem;
 
     font-weight: bold;
-
-    letter-spacing: 1px;
-
-    transition: 0.3s;
 }
 
-.stButton > button:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 20px rgba(212,175,55,0.25);
-}
-
-/* SIDEBAR */
-section[data-testid="stSidebar"] {
-    background-color: #111111;
-    border-right: 1px solid rgba(212,175,55,0.15);
-}
-
-/* RAG CARDS */
 .rag-card {
     background: #161616;
 
@@ -225,11 +173,6 @@ section[data-testid="stSidebar"] {
     padding: 20px;
 
     margin-top: 10px;
-}
-
-/* DIVIDER */
-hr {
-    border-color: rgba(212,175,55,0.15);
 }
 
 </style>
@@ -257,55 +200,9 @@ with st.sidebar:
         placeholder="Vegetarian, Vegan, Keto..."
     )
 
-    st.markdown("---")
-
-    st.info("📸 Upload ingredients or type them manually.")
-
 # =========================
-# INPUT TABS
+# INPUT
 # =========================
-tabs = st.tabs(["📸 Upload Image", "✍️ Manual Ingredients"])
-
-# TAB 1
-with tabs[0]:
-
-    uploaded = st.file_uploader(
-        "Upload pantry image",
-        type=["png", "jpg", "jpeg"]
-    )
-
-    if uploaded:
-
-        st.image(uploaded, use_container_width=True)
-
-        if st.button("🔍 Detect Ingredients"):
-
-            with st.spinner("Analyzing ingredients..."):
-
-                uploaded.seek(0)
-
-                img_bytes = uploaded.read()
-
-                detected = extract_ingredients(img_bytes)
-
-                if detected:
-                    st.session_state.ingredients_list = ", ".join(detected)
-                    st.success(f"Detected {len(detected)} ingredients")
-                else:
-                    st.warning("No ingredients detected")
-
-            st.rerun()
-
-# TAB 2
-with tabs[1]:
-
-    st.write("Type ingredients manually.")
-
-# =========================
-# INGREDIENTS
-# =========================
-st.divider()
-
 st.subheader("🥂 Ingredients")
 
 final_ingredients = st.text_area(
@@ -349,8 +246,6 @@ if st.button("⭐ Create Michelin Dish"):
 # =========================
 if st.session_state.recipe_body:
 
-    st.divider()
-
     st.markdown(f"""
     <div class="recipe-card">
 
@@ -368,7 +263,7 @@ if st.session_state.recipe_body:
     """, unsafe_allow_html=True)
 
     # =========================
-    # RAG
+    # RAG SECTION
     # =========================
     if st.session_state.rag_recommendations:
 
@@ -379,6 +274,8 @@ if st.session_state.recipe_body:
         for i, rec in enumerate(st.session_state.rag_recommendations):
 
             with cols[i]:
+
+                score = abs(1 - rec.get('score', 0))
 
                 st.markdown(f"""
                 <div class="rag-card">
@@ -395,7 +292,7 @@ if st.session_state.recipe_body:
                         font-size:14px;
                     ">
                         Match Score:
-                        {1 - rec.get('score', 0):.2f}
+                        {score:.2f}
                     </p>
 
                 </div>
