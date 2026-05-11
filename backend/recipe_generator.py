@@ -5,7 +5,7 @@ from .rag_pipeline import query_similar
 def generate_chef_response(ingredients: list, prefs: str = ""):
 
     # =========================
-    # RAG (optional)
+    # RAG (optional recommendations)
     # =========================
     try:
         similar_recipes = query_similar(ingredients, top_k=2)
@@ -13,36 +13,71 @@ def generate_chef_response(ingredients: list, prefs: str = ""):
         similar_recipes = []
 
     # =========================
-    # RECIPE SEARCH
+    # SEARCH RECIPE (LOCAL DB)
     # =========================
     recipe = search_recipe(ingredients)
 
+    # =========================
+    # FALLBACK IF NOTHING FOUND
+    # =========================
     if not recipe:
+
+        body = """
+        <p><b>No matching recipe found.</b></p>
+        <p>Try adding more or different ingredients.</p>
+        """
+
         return (
-            "No Recipe Found",
-            {
-                "ingredients": [],
-                "instructions": []
-            },
+            "Chef's Surprise",
+            body,
             similar_recipes
         )
 
     # =========================
-    # CLEAN OUTPUT STRUCTURE
+    # INGREDIENTS (HTML LIST)
     # =========================
-    instructions = recipe.get("instructions", "")
+    ingredients_html = ""
+
+    for ing in recipe.get("ingredients", []):
+        ingredients_html += f"<li>{ing}</li>"
+
+    # =========================
+    # INSTRUCTIONS (CLEAN STEPS)
+    # =========================
+    instructions_raw = recipe.get("instructions", "")
 
     steps = [
-        s.strip()
-        for s in instructions.split(".")
-        if s.strip()
+        step.strip()
+        for step in instructions_raw.split(".")
+        if step.strip()
     ]
+
+    steps_html = ""
+
+    for i, step in enumerate(steps, start=1):
+        steps_html += f"""
+        <div class="step">
+            <b>Step {i}:</b> {step}.
+        </div>
+        """
+
+    # =========================
+    # FINAL OUTPUT (ONLY CONTENT)
+    # =========================
+    body_html = f"""
+
+    <h3>🥘 Ingredients</h3>
+    <ul>
+        {ingredients_html}
+    </ul>
+
+    <h3>👨‍🍳 Instructions</h3>
+    {steps_html}
+
+    """
 
     return (
         recipe.get("title", "Chef Recipe"),
-        {
-            "ingredients": recipe.get("ingredients", []),
-            "instructions": steps
-        },
+        body_html,
         similar_recipes
     )
