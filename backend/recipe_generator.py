@@ -1,10 +1,7 @@
-# =========================
-# backend/recipe_generator.py
-# =========================
-
 from .simple_recipe_search import search_recipe
 from .rag_pipeline import query_similar
 import re
+
 
 # =========================
 # CLEAN TEXT
@@ -37,23 +34,21 @@ def generate_chef_response(ingredients: list, prefs: str = ""):
     # =========================
     if not recipe:
 
-        empty_html = """
-        <h3>No Recipe Found</h3>
-
-        <p>
-        We could not find a matching recipe for your ingredients.
-        Try adding more ingredients.
-        </p>
+        body = """
+        <div class='recipe-text'>
+            <p>No matching recipe found.</p>
+            <p>Try adding more ingredients.</p>
+        </div>
         """
 
         return (
             "No Recipe Found",
-            empty_html,
+            body,
             similar_recipes
         )
 
     # =========================
-    # FORMAT INGREDIENTS
+    # INGREDIENTS HTML
     # =========================
     ingredients_html = ""
 
@@ -61,14 +56,14 @@ def generate_chef_response(ingredients: list, prefs: str = ""):
         ingredients_html += f"<li>{clean_text(ing)}</li>"
 
     # =========================
-    # FORMAT INSTRUCTIONS
+    # INSTRUCTIONS HTML
     # =========================
     instructions_raw = recipe.get(
         "instructions",
         "No instructions available."
     )
 
-    instruction_parts = [
+    steps = [
         x.strip()
         for x in instructions_raw.split(".")
         if x.strip()
@@ -76,19 +71,19 @@ def generate_chef_response(ingredients: list, prefs: str = ""):
 
     instructions_html = ""
 
-    for step in instruction_parts:
+    for i, step in enumerate(steps, start=1):
+
         instructions_html += f"""
         <div class="step">
-            • {clean_text(step)}.
+            <b>Step {i}:</b> {clean_text(step)}.
         </div>
         """
 
     # =========================
-    # FINAL HTML
+    # FINAL CLEAN HTML
     # =========================
-    body_html = f"""
-
-    <div class="recipe-section">
+    body = f"""
+    <div class="recipe-content">
 
         <h3>🥘 Ingredients</h3>
 
@@ -108,6 +103,6 @@ def generate_chef_response(ingredients: list, prefs: str = ""):
     # =========================
     return (
         recipe.get("title", "Chef Recipe"),
-        body_html,
+        body,
         similar_recipes
     )
